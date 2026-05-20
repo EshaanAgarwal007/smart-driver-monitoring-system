@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}My History — AVALON MOTORS{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <div class="dashboard-sidebar" id="sidebar">
+    <div style="padding:1.5rem 1.5rem 0.5rem;">
+      <div style="font-size:0.82rem;color:var(--text-muted);">Signed in as</div>
+      <div style="font-family:var(--font-display);font-size:0.9rem;font-weight:700;margin-top:3px;">{{ profile.full_name }}</div>
+      <div class="mt-1"><span class="badge-avalon badge-{{ profile.status }}">{{ profile.get_status_display }}</span></div>
+    </div>
+    <div class="divider-glow mx-3 my-2"></div>
+    <div class="sidebar-section-title">Navigation</div>
+    <a href="{% url 'driver_dashboard' %}" class="sidebar-nav-item"><i class="bi bi-grid-1x2-fill"></i> Dashboard</a>
+    <a href="{% url 'start_monitoring' %}" class="sidebar-nav-item"><i class="bi bi-eye-fill"></i> Start Monitoring</a>
+    <a href="{% url 'monitoring_history' %}" class="sidebar-nav-item active"><i class="bi bi-clock-history"></i> History & Reports</a>
+    <div class="sidebar-section-title">Account</div>
+    <a href="{% url 'logout' %}" class="sidebar-nav-item" style="color:var(--red-alert);"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+  </div>
+
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.7rem;font-weight:700;letter-spacing:0.2em;color:var(--cyan);text-transform:uppercase;">Driver Portal</div>
+        <h1 style="font-family:var(--font-display);font-size:1.6rem;font-weight:900;letter-spacing:0.04em;margin-top:3px;">MY HISTORY & REPORTS</h1>
+      </div>
+      {% if profile.status == 'approved' %}
+      <a href="{% url 'start_monitoring' %}" class="avalon-btn-primary d-inline-flex align-items-center gap-2" style="font-size:0.82rem;">
+        <i class="bi bi-play-circle-fill"></i> NEW SESSION
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="stat-widget stat-cyan">
+          <div class="stat-value val-cyan">{{ total_sessions }}</div>
+          <div class="stat-label">Completed Sessions</div>
+          <i class="bi bi-play-circle stat-icon" style="color:var(--cyan);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-widget stat-orange">
+          <div class="stat-value val-orange">{{ total_alerts }}</div>
+          <div class="stat-label">Total Alerts</div>
+          <i class="bi bi-bell stat-icon" style="color:var(--orange-warn);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-widget stat-green">
+          <div class="stat-value val-green">{{ profile.vehicle_number }}</div>
+          <div class="stat-label">Vehicle Number</div>
+          <i class="bi bi-car-front stat-icon" style="color:var(--accent);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-widget" style="background:rgba(130,80,255,0.1);border:1px solid rgba(130,80,255,0.25);">
+          <div class="stat-value" style="color:#8250ff;">{{ profile.total_sessions|default:"0" }}</div>
+          <div class="stat-label">All Time Sessions</div>
+          <i class="bi bi-graph-up stat-icon" style="color:#8250ff;"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monthly Chart -->
+    <div class="glass-card p-4 mb-4">
+      <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1.2rem;">Monthly Sessions — Last 6 Months</div>
+      <canvas id="monthlyChart" height="120"></canvas>
+    </div>
+
+    <!-- Sessions Table -->
+    <div class="glass-card p-0" style="overflow:hidden;">
+      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--glass-border);">
+        <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;">All Monitoring Sessions</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="avalon-table" style="min-width:700px;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Start Time</th>
+              <th>Duration</th>
+              <th>Alerts</th>
+              <th>Fatigue Events</th>
+              <th>Eye Closures</th>
+              <th>Safety Score</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in sessions %}
+            <tr>
+              <td style="font-size:0.85rem;font-weight:600;">{{ s.start_time|date:"M d, Y" }}</td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted);">{{ s.start_time|date:"H:i:s" }}</td>
+              <td style="font-family:var(--font-mono);font-size:0.85rem;color:var(--cyan);">{{ s.get_duration_display }}</td>
+              <td style="font-family:var(--font-mono);font-size:0.88rem;color:{% if s.total_alerts > 5 %}var(--red-alert){% elif s.total_alerts > 0 %}var(--orange-warn){% else %}var(--accent){% endif %};">{{ s.total_alerts }}</td>
+              <td style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-secondary);">{{ s.total_fatigue_events }}</td>
+              <td style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-secondary);">{{ s.eye_closure_count }}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <div style="flex:1;min-width:60px;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+                    <div style="height:100%;width:{{ s.safety_score }}%;background:{% if s.safety_score > 70 %}var(--accent){% elif s.safety_score > 40 %}var(--orange-warn){% else %}var(--red-alert){% endif %};border-radius:2px;transition:width 0.3s;"></div>
+                  </div>
+                  <span style="font-family:var(--font-mono);font-size:0.75rem;color:{% if s.safety_score > 70 %}var(--accent){% elif s.safety_score > 40 %}var(--orange-warn){% else %}var(--red-alert){% endif %};">{{ s.safety_score|floatformat:0 }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="badge-avalon badge-{% if s.status == 'completed' %}approved{% elif s.status == 'active' %}active{% else %}medium{% endif %}">
+                  {{ s.status|upper }}
+                </span>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="8" style="text-align:center;padding:3rem;color:var(--text-muted);">
+                <i class="bi bi-clock-history" style="font-size:2.5rem;display:block;margin-bottom:0.75rem;opacity:0.4;"></i>
+                No monitoring sessions yet.
+                {% if profile.status == 'approved' %}
+                <br><a href="{% url 'start_monitoring' %}" style="color:var(--cyan);font-size:0.88rem;">Start your first session →</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const monthly = {{ monthly_data|safe }};
+new Chart(document.getElementById('monthlyChart').getContext('2d'), {
+  type: 'bar',
+  data: {
+    labels: monthly.map(d => d.month),
+    datasets: [{
+      label: 'Sessions',
+      data: monthly.map(d => d.count),
+      backgroundColor: 'rgba(0,212,255,0.2)',
+      borderColor: '#00d4ff',
+      borderWidth: 1.5,
+      borderRadius: 8,
+      hoverBackgroundColor: 'rgba(0,212,255,0.35)',
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { color: '#4a6480', font: { family: "'Share Tech Mono'", size: 11 } }, grid: { color: 'rgba(0,212,255,0.06)' } },
+      x: { ticks: { color: '#8ca8c8', font: { family: "'Exo 2'", size: 12 } }, grid: { display: false } }
+    }
+  }
+});
+</script>
+{% endblock %}

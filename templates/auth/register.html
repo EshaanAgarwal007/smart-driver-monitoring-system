@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Register Driver — AVALON MOTORS{% endblock %}
+
+{% block content %}
+<div style="min-height:100vh;padding:6rem 1rem 3rem;position:relative;overflow:hidden;">
+
+  <div style="position:fixed;inset:0;background:radial-gradient(ellipse 60% 60% at 70% 40%,rgba(0,102,255,0.09),transparent),var(--navy);z-index:-1;"></div>
+  <div style="position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,0.03) 1px,transparent 1px);background-size:60px 60px;z-index:-1;"></div>
+
+  <div style="max-width:800px;margin:0 auto;">
+
+    <!-- Header -->
+    <div class="text-center mb-4 fade-in-up">
+      <a href="{% url 'home' %}" class="avalon-logo justify-content-center d-inline-flex mb-3">
+        <div class="logo-icon"><span class="logo-a">A</span></div>
+        <div class="logo-text ms-2">
+          <span class="logo-main">AVALON</span>
+          <span class="logo-sub">MOTORS</span>
+        </div>
+      </a>
+      <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.25em;color:var(--cyan);">DRIVER ENROLLMENT</div>
+      <h2 style="font-family:var(--font-display);font-size:1.6rem;font-weight:900;letter-spacing:0.04em;margin-top:0.4rem;">CREATE YOUR PROFILE</h2>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-top:0.3rem;">Complete all fields. Your account will be reviewed by an admin before activation.</p>
+    </div>
+
+    <!-- Status notice -->
+    <div class="glass-card p-3 mb-4 d-flex align-items-center gap-3 fade-in-up" style="border-color:rgba(255,204,0,0.25);animation-delay:0.05s;">
+      <i class="bi bi-info-circle-fill" style="color:var(--yellow-warn);font-size:1.3rem;flex-shrink:0;"></i>
+      <div style="font-size:0.85rem;color:var(--text-secondary);">
+        After registration your account status will be <span style="color:var(--yellow-warn);font-weight:600;">PENDING</span> until approved by the Avalon Motors admin team.
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="glass-card p-4 p-md-5 fade-in-up" style="animation-delay:0.1s;">
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- SECTION: Account -->
+        <div class="mb-4">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--cyan);text-transform:uppercase;margin-bottom:1.2rem;padding-bottom:0.6rem;border-bottom:1px solid var(--glass-border);">
+            <i class="bi bi-person-circle me-2"></i>Account Credentials
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Username *</label>
+              {{ form.username }}
+              {% if form.username.errors %}<div class="invalid-feedback d-block">{{ form.username.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Password *</label>
+              {{ form.password1 }}
+              {% if form.password1.errors %}<div class="invalid-feedback d-block">{{ form.password1.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Confirm Password *</label>
+              {{ form.password2 }}
+              {% if form.password2.errors %}<div class="invalid-feedback d-block">{{ form.password2.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email Address *</label>
+              {{ form.email }}
+              {% if form.email.errors %}<div class="invalid-feedback d-block">{{ form.email.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: Personal -->
+        <div class="mb-4">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--cyan);text-transform:uppercase;margin-bottom:1.2rem;padding-bottom:0.6rem;border-bottom:1px solid var(--glass-border);">
+            <i class="bi bi-person-vcard me-2"></i>Personal Details
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Full Name *</label>
+              {{ form.full_name }}
+              {% if form.full_name.errors %}<div class="invalid-feedback d-block">{{ form.full_name.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Age *</label>
+              {{ form.age }}
+              {% if form.age.errors %}<div class="invalid-feedback d-block">{{ form.age.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Date of Birth *</label>
+              {{ form.date_of_birth }}
+              {% if form.date_of_birth.errors %}<div class="invalid-feedback d-block">{{ form.date_of_birth.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Mobile Number *</label>
+              {{ form.mobile }}
+              {% if form.mobile.errors %}<div class="invalid-feedback d-block">{{ form.mobile.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Address *</label>
+              {{ form.address }}
+              {% if form.address.errors %}<div class="invalid-feedback d-block">{{ form.address.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION: Vehicle -->
+        <div class="mb-4">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--cyan);text-transform:uppercase;margin-bottom:1.2rem;padding-bottom:0.6rem;border-bottom:1px solid var(--glass-border);">
+            <i class="bi bi-car-front-fill me-2"></i>Vehicle Information
+          </div>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Vehicle Number *</label>
+              {{ form.vehicle_number }}
+              {% if form.vehicle_number.errors %}<div class="invalid-feedback d-block">{{ form.vehicle_number.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">License Number *</label>
+              {{ form.license_number }}
+              {% if form.license_number.errors %}<div class="invalid-feedback d-block">{{ form.license_number.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Vehicle Brand *</label>
+              {{ form.vehicle_brand }}
+              {% if form.vehicle_brand.errors %}<div class="invalid-feedback d-block">{{ form.vehicle_brand.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Vehicle Model *</label>
+              {{ form.vehicle_model }}
+              {% if form.vehicle_model.errors %}<div class="invalid-feedback d-block">{{ form.vehicle_model.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Non-field errors -->
+        {% if form.non_field_errors %}
+        <div style="background:rgba(255,34,68,0.1);border:1px solid rgba(255,34,68,0.3);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+          {% for error in form.non_field_errors %}
+          <div style="color:var(--red-alert);font-size:0.87rem;"><i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-3 flex-wrap mt-2">
+          <button type="submit" class="avalon-btn-primary d-inline-flex align-items-center gap-2" style="padding:0.9rem 2rem;font-size:0.85rem;flex:1;justify-content:center;">
+            <i class="bi bi-shield-fill-plus"></i>
+            <span>SUBMIT REGISTRATION</span>
+          </button>
+          <a href="{% url 'login' %}" class="avalon-btn-ghost d-inline-flex align-items-center gap-2" style="padding:0.9rem 1.5rem;font-size:0.85rem;justify-content:center;">
+            Already registered?
+          </a>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

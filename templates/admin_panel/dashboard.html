@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Admin Control Center — AVALON MOTORS{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  
+
+  <!-- Sidebar -->
+  <div class="dashboard-sidebar" id="sidebar">
+    <div style="padding:1.5rem 1.5rem 0.5rem;">
+      <div style="font-size:0.75rem;color:var(--text-muted);">Administrator</div>
+      <div style="font-family:var(--font-display);font-size:0.9rem;font-weight:700;margin-top:3px;">{{ request.user.username|upper }}</div>
+      <div class="mt-1"><span class="badge-avalon badge-approved">ADMIN ACCESS</span></div>
+    </div>
+    <div class="divider-glow mx-3 my-2"></div>
+
+    <div class="sidebar-section-title">Control Center</div>
+    <a href="{% url 'admin_dashboard' %}" class="sidebar-nav-item active"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="{% url 'admin_drivers' %}" class="sidebar-nav-item"><i class="bi bi-people-fill"></i> Manage Drivers</a>
+    <a href="{% url 'admin_drivers' %}?status=pending" class="sidebar-nav-item">
+      <i class="bi bi-hourglass-split"></i> Pending Approvals
+      {% if pending_count > 0 %}<span style="margin-left:auto;background:var(--orange-warn);color:#000;font-size:0.7rem;font-weight:700;padding:1px 7px;border-radius:10px;">{{ pending_count }}</span>{% endif %}
+    </a>
+
+    <div class="sidebar-section-title">System</div>
+    <a href="{% url 'logout' %}" class="sidebar-nav-item" style="color:var(--red-alert);"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+  </div>
+
+  <!-- Main -->
+  <div class="dashboard-main">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.7rem;font-weight:700;letter-spacing:0.2em;color:var(--cyan);text-transform:uppercase;">Control Center</div>
+        <h1 style="font-family:var(--font-display);font-size:1.6rem;font-weight:900;letter-spacing:0.04em;margin-top:3px;">ADMIN DASHBOARD</h1>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <!-- Live notifications bell -->
+        <div style="position:relative;">
+          <button id="notifBell" style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;padding:0.6rem 0.8rem;color:var(--text-secondary);cursor:pointer;transition:var(--transition);" onclick="toggleNotifPanel()">
+            <i class="bi bi-bell-fill" style="font-size:1.1rem;"></i>
+            {% if unread_count > 0 %}
+            <span id="notifCount" style="position:absolute;top:-4px;right:-4px;background:var(--red-alert);color:white;font-size:0.65rem;font-weight:700;padding:1px 5px;border-radius:8px;">{{ unread_count }}</span>
+            {% endif %}
+          </button>
+          <!-- Notification Panel -->
+          <div id="notifPanel" style="display:none;position:absolute;right:0;top:110%;width:360px;z-index:200;">
+            <div class="glass-card p-3" style="max-height:400px;overflow-y:auto;">
+              <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1rem;">Recent Alerts</div>
+              {% for n in notifications %}
+              <div class="d-flex gap-2 mb-2 pb-2" style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                <div style="flex-shrink:0;margin-top:2px;">
+                  {% if n.priority == 'urgent' %}<i class="bi bi-exclamation-octagon-fill" style="color:var(--red-alert);"></i>
+                  {% elif n.priority == 'high' %}<i class="bi bi-exclamation-triangle-fill" style="color:var(--orange-warn);"></i>
+                  {% else %}<i class="bi bi-info-circle-fill" style="color:var(--cyan);"></i>{% endif %}
+                </div>
+                <div>
+                  <div style="font-size:0.82rem;font-weight:600;">{{ n.title|truncatechars:50 }}</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);">{{ n.created_at|date:"M d H:i" }}</div>
+                </div>
+              </div>
+              {% empty %}
+              <div style="text-align:center;color:var(--text-muted);padding:1rem;font-size:0.85rem;">No new notifications</div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div id="liveClock" style="font-family:var(--font-mono);font-size:0.85rem;color:var(--text-muted);"></div>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-2">
+        <div class="stat-widget stat-cyan">
+          <div class="stat-value val-cyan">{{ total_drivers }}</div>
+          <div class="stat-label">Total Drivers</div>
+          <i class="bi bi-people-fill stat-icon" style="color:var(--cyan);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <div class="stat-widget stat-orange">
+          <div class="stat-value val-orange">{{ pending_count }}</div>
+          <div class="stat-label">Pending</div>
+          <i class="bi bi-hourglass stat-icon" style="color:var(--orange-warn);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <div class="stat-widget stat-green">
+          <div class="stat-value val-green">{{ approved_count }}</div>
+          <div class="stat-label">Approved</div>
+          <i class="bi bi-shield-fill-check stat-icon" style="color:var(--accent);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <div class="stat-widget" style="background:linear-gradient(135deg,rgba(130,80,255,0.15),rgba(80,40,200,0.1));border:1px solid rgba(130,80,255,0.25);">
+          <div class="stat-value" style="color:#8250ff;">{{ active_sessions }}</div>
+          <div class="stat-label">Live Sessions</div>
+          <i class="bi bi-broadcast stat-icon" style="color:#8250ff;"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <div class="stat-widget stat-red">
+          <div class="stat-value val-red">{{ total_alerts }}</div>
+          <div class="stat-label">Total Alerts</div>
+          <i class="bi bi-bell-fill stat-icon" style="color:var(--red-alert);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <div class="stat-widget stat-cyan">
+          <div class="stat-value val-cyan">{{ total_sessions }}</div>
+          <div class="stat-label">Sessions</div>
+          <i class="bi bi-play-circle-fill stat-icon" style="color:var(--cyan);"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-8">
+        <div class="glass-card p-4 h-100">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1.2rem;">7-Day Activity Overview</div>
+          <canvas id="activityChart" height="200"></canvas>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1.2rem;">Alert Types</div>
+          <canvas id="alertTypeChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Sessions + Pending Approvals -->
+    <div class="row g-4 mb-4">
+
+      <!-- Active Sessions -->
+      <div class="col-lg-5">
+        <div class="glass-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;">
+              <span style="color:var(--accent);">●</span> Live Sessions
+            </div>
+            <span style="font-family:var(--font-display);font-size:0.7rem;color:var(--accent);">{{ active_sessions }} ACTIVE</span>
+          </div>
+          {% if active_drivers %}
+          {% for session in active_drivers %}
+          <div style="display:flex;align-items:center;gap:12px;padding:0.8rem;background:rgba(0,255,136,0.04);border:1px solid rgba(0,255,136,0.12);border-radius:10px;margin-bottom:8px;">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px var(--accent);flex-shrink:0;"></div>
+            <div style="flex:1;">
+              <div style="font-size:0.85rem;font-weight:600;">{{ session.driver.full_name }}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);">{{ session.driver.vehicle_number }} · {{ session.start_time|date:"H:i" }}</div>
+            </div>
+            <a href="{% url 'admin_driver_detail' session.driver.id %}" style="font-size:0.75rem;color:var(--cyan);">View</a>
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="text-center py-4" style="color:var(--text-muted);font-size:0.88rem;"><i class="bi bi-moon-stars" style="font-size:1.8rem;display:block;margin-bottom:6px;"></i>No active sessions</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Pending Approvals -->
+      <div class="col-lg-7">
+        <div class="glass-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;">Pending Approvals</div>
+            <a href="{% url 'admin_drivers' %}?status=pending" style="font-size:0.78rem;color:var(--cyan);">View all</a>
+          </div>
+          {% for driver in recent_registrations %}
+          {% if driver.status == 'pending' %}
+          <div style="display:flex;align-items:center;gap:12px;padding:0.8rem;background:rgba(255,204,0,0.04);border:1px solid rgba(255,204,0,0.12);border-radius:10px;margin-bottom:8px;">
+            <div style="flex:1;">
+              <div style="font-size:0.88rem;font-weight:600;">{{ driver.full_name }}</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);">{{ driver.vehicle_brand|upper }} {{ driver.vehicle_model }} · {{ driver.mobile }}</div>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="{% url 'driver_action' driver.id 'approve' %}" class="btn btn-sm" style="background:rgba(0,255,136,0.15);color:var(--accent);border:1px solid rgba(0,255,136,0.3);font-size:0.72rem;font-family:var(--font-display);font-weight:700;letter-spacing:0.08em;">
+                <i class="bi bi-check-lg"></i> APPROVE
+              </a>
+              <a href="{% url 'driver_action' driver.id 'reject' %}" class="btn btn-sm" style="background:rgba(255,34,68,0.1);color:var(--red-alert);border:1px solid rgba(255,34,68,0.25);font-size:0.72rem;font-family:var(--font-display);font-weight:700;letter-spacing:0.08em;">
+                <i class="bi bi-x-lg"></i> REJECT
+              </a>
+            </div>
+          </div>
+          {% endif %}
+          {% empty %}
+          <div class="text-center py-4" style="color:var(--text-muted);font-size:0.88rem;"><i class="bi bi-check-circle" style="font-size:1.8rem;display:block;color:var(--accent);margin-bottom:6px;"></i>No pending registrations</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Alerts Table -->
+    <div class="glass-card p-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;">Recent Alert Feed</div>
+        <div id="liveDot" style="font-family:var(--font-display);font-size:0.7rem;color:var(--accent);"><i class="bi bi-broadcast me-1"></i>LIVE</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="avalon-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Driver</th>
+              <th>Vehicle</th>
+              <th>Alert Type</th>
+              <th>Severity</th>
+              <th>Duration</th>
+            </tr>
+          </thead>
+          <tbody id="alertTableBody">
+            {% for alert in recent_alerts %}
+            <tr>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted);">{{ alert.timestamp|date:"H:i:s" }}</td>
+              <td>
+                <a href="{% url 'admin_driver_detail' alert.driver.id %}" style="font-size:0.88rem;font-weight:600;color:var(--text-primary);">{{ alert.driver.full_name }}</a>
+              </td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;color:var(--cyan);">{{ alert.driver.vehicle_number }}</td>
+              <td style="font-size:0.82rem;">{{ alert.get_alert_type_display }}</td>
+              <td><span class="badge-avalon badge-{{ alert.severity }}">{{ alert.severity|upper }}</span></td>
+              <td style="font-family:var(--font-mono);font-size:0.8rem;">{{ alert.duration_seconds|floatformat:1 }}s</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">No alerts recorded yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Live clock
+setInterval(() => {
+  const el = document.getElementById('liveClock');
+  if (el) el.textContent = new Date().toLocaleTimeString();
+}, 1000);
+
+// Notification panel toggle
+function toggleNotifPanel() {
+  const p = document.getElementById('notifPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', e => {
+  const bell = document.getElementById('notifBell');
+  const panel = document.getElementById('notifPanel');
+  if (panel && bell && !bell.contains(e.target) && !panel.contains(e.target)) {
+    panel.style.display = 'none';
+  }
+});
+
+// Activity Chart
+const daily = {{ daily_data|safe }};
+const actCtx = document.getElementById('activityChart').getContext('2d');
+new Chart(actCtx, {
+  type: 'line',
+  data: {
+    labels: daily.map(d => d.day),
+    datasets: [
+      {
+        label: 'Sessions', data: daily.map(d => d.sessions),
+        borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.1)',
+        tension: 0.4, fill: true, pointBackgroundColor: '#00d4ff', pointRadius: 4,
+      },
+      {
+        label: 'Alerts', data: daily.map(d => d.alerts),
+        borderColor: '#ff8800', backgroundColor: 'rgba(255,136,0,0.08)',
+        tension: 0.4, fill: true, pointBackgroundColor: '#ff8800', pointRadius: 4,
+      },
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { labels: { color: '#8ca8c8', font: { family: "'Exo 2'" } } } },
+    scales: {
+      y: { beginAtZero: true, ticks: { color: '#4a6480' }, grid: { color: 'rgba(0,212,255,0.06)' } },
+      x: { ticks: { color: '#8ca8c8' }, grid: { display: false } },
+    }
+  }
+});
+
+// Alert type donut
+const alertDist = {{ alert_distribution|safe }};
+const atCtx = document.getElementById('alertTypeChart').getContext('2d');
+const colors = ['#00d4ff','#ff8800','#ff2244','#00ff88','#ffcc00','#8250ff'];
+new Chart(atCtx, {
+  type: 'doughnut',
+  data: {
+    labels: alertDist.map(d => d.alert_type),
+    datasets: [{
+      data: alertDist.map(d => d.count),
+      backgroundColor: colors.map(c => c + '88'),
+      borderColor: colors,
+      borderWidth: 1.5,
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { position: 'bottom', labels: { color: '#8ca8c8', font: { family: "'Exo 2'" }, padding: 12, boxWidth: 12 } }
+    },
+    cutout: '65%',
+  }
+});
+
+// Live alerts polling
+let lastAlertTime = new Date().toISOString();
+setInterval(async () => {
+  try {
+    const res = await fetch(`/api/admin/live-alerts/?since=${lastAlertTime}`);
+    const data = await res.json();
+    if (data.count > 0) {
+      lastAlertTime = new Date().toISOString();
+      const countEl = document.getElementById('notifCount');
+      if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + data.count;
+    }
+  } catch(e) {}
+}, 10000);
+</script>
+
+{% endblock %}

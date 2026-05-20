@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Manage Drivers — AVALON MOTORS{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <div class="dashboard-sidebar" id="sidebar">
+    <div style="padding:1.5rem 1.5rem 0.5rem;">
+      <div style="font-size:0.75rem;color:var(--text-muted);">Administrator</div>
+      <div style="font-family:var(--font-display);font-size:0.9rem;font-weight:700;margin-top:3px;">{{ request.user.username|upper }}</div>
+      <div class="mt-1"><span class="badge-avalon badge-approved">ADMIN ACCESS</span></div>
+    </div>
+    <div class="divider-glow mx-3 my-2"></div>
+    <div class="sidebar-section-title">Control Center</div>
+    <a href="{% url 'admin_dashboard' %}" class="sidebar-nav-item"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="{% url 'admin_drivers' %}" class="sidebar-nav-item active"><i class="bi bi-people-fill"></i> Manage Drivers</a>
+    <a href="{% url 'admin_drivers' %}?status=pending" class="sidebar-nav-item">
+      <i class="bi bi-hourglass-split"></i> Pending
+      {% if counts.pending > 0 %}<span style="margin-left:auto;background:var(--orange-warn);color:#000;font-size:0.7rem;font-weight:700;padding:1px 7px;border-radius:10px;">{{ counts.pending }}</span>{% endif %}
+    </a>
+    <div class="sidebar-section-title">System</div>
+    <a href="{% url 'logout' %}" class="sidebar-nav-item" style="color:var(--red-alert);"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+  </div>
+
+  <div class="dashboard-main">
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.7rem;font-weight:700;letter-spacing:0.2em;color:var(--cyan);text-transform:uppercase;">Fleet Management</div>
+        <h1 style="font-family:var(--font-display);font-size:1.6rem;font-weight:900;letter-spacing:0.04em;margin-top:3px;">MANAGE DRIVERS</h1>
+      </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="d-flex gap-2 flex-wrap mb-3">
+      {% for item in status_list %}
+      <a href="{% if item == 'all' %}{% url 'admin_drivers' %}{% else %}?status={{ item }}{% endif %}"
+         style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.08em;
+                background:{% if status_filter == item or item == 'all' and not status_filter %}rgba(0,212,255,0.12){% else %}var(--glass-bg){% endif %};
+                color:{% if status_filter == item or item == 'all' and not status_filter %}var(--cyan){% else %}var(--text-muted){% endif %};
+                border:1px solid {% if status_filter == item or item == 'all' and not status_filter %}rgba(0,212,255,0.35){% else %}var(--glass-border){% endif %};
+                border-radius:8px;padding:0.45rem 1rem;text-decoration:none;transition:var(--transition);">
+        {{ item|upper }} ({{ counts|dictsort:item }})
+      </a>
+      {% endfor %}
+    </div>
+
+    <!-- Search -->
+    <form method="get" class="mb-4">
+      {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+      <div style="display:flex;gap:10px;max-width:480px;">
+        <input type="text" name="q" value="{{ search }}" placeholder="Search by name, vehicle no, license..."
+               class="form-control avalon-input" style="flex:1;">
+        <button type="submit" class="avalon-btn-primary" style="padding:0.6rem 1.2rem;font-size:0.78rem;white-space:nowrap;">
+          <i class="bi bi-search me-1"></i> SEARCH
+        </button>
+        {% if search %}
+        <a href="{% url 'admin_drivers' %}{% if status_filter %}?status={{ status_filter }}{% endif %}" class="avalon-btn-ghost" style="padding:0.6rem 1rem;font-size:0.78rem;white-space:nowrap;">CLEAR</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <!-- Drivers Table -->
+    <div class="glass-card p-0" style="overflow:hidden;">
+      <div style="overflow-x:auto;">
+        <table class="avalon-table" style="min-width:900px;">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Driver</th>
+              <th>Vehicle</th>
+              <th>License</th>
+              <th>Mobile</th>
+              <th>Sessions</th>
+              <th>Alerts</th>
+              <th>Status</th>
+              <th>Registered</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for driver in drivers %}
+            <tr>
+              <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted);">#{{ driver.id }}</td>
+              <td>
+                <a href="{% url 'admin_driver_detail' driver.id %}" style="font-size:0.88rem;font-weight:600;color:var(--text-primary);">{{ driver.full_name }}</a>
+                <div style="font-size:0.74rem;color:var(--text-muted);">{{ driver.user.email|truncatechars:24 }}</div>
+              </td>
+              <td>
+                <div style="font-family:var(--font-mono);font-size:0.82rem;color:var(--cyan);">{{ driver.vehicle_number }}</div>
+                <div style="font-size:0.74rem;color:var(--text-muted);">{{ driver.get_vehicle_brand_display }} {{ driver.vehicle_model }}</div>
+              </td>
+              <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-secondary);">{{ driver.license_number|truncatechars:16 }}</td>
+              <td style="font-size:0.82rem;color:var(--text-secondary);">{{ driver.mobile }}</td>
+              <td style="font-family:var(--font-mono);font-size:0.85rem;color:var(--cyan);">{{ driver.sessions.count }}</td>
+              <td style="font-family:var(--font-mono);font-size:0.85rem;color:{% if driver.total_alerts > 10 %}var(--red-alert){% elif driver.total_alerts > 0 %}var(--orange-warn){% else %}var(--accent){% endif %};">{{ driver.total_alerts }}</td>
+              <td><span class="badge-avalon badge-{{ driver.status }}">{{ driver.get_status_display }}</span></td>
+              <td style="font-size:0.78rem;color:var(--text-muted);">{{ driver.created_at|date:"M d, Y" }}</td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <a href="{% url 'admin_driver_detail' driver.id %}" class="btn btn-sm" style="background:rgba(0,212,255,0.1);color:var(--cyan);border:1px solid rgba(0,212,255,0.25);font-size:0.7rem;font-family:var(--font-display);padding:0.3rem 0.6rem;border-radius:6px;" title="View Detail">
+                    <i class="bi bi-eye"></i>
+                  </a>
+                  {% if driver.status == 'pending' %}
+                  <a href="{% url 'driver_action' driver.id 'approve' %}" class="btn btn-sm" style="background:rgba(0,255,136,0.1);color:var(--accent);border:1px solid rgba(0,255,136,0.25);font-size:0.7rem;font-family:var(--font-display);padding:0.3rem 0.6rem;border-radius:6px;" title="Approve">
+                    <i class="bi bi-check-lg"></i>
+                  </a>
+                  <a href="{% url 'driver_action' driver.id 'reject' %}" class="btn btn-sm" style="background:rgba(255,34,68,0.1);color:var(--red-alert);border:1px solid rgba(255,34,68,0.25);font-size:0.7rem;font-family:var(--font-display);padding:0.3rem 0.6rem;border-radius:6px;" title="Reject">
+                    <i class="bi bi-x-lg"></i>
+                  </a>
+                  {% elif driver.status == 'approved' %}
+                  <a href="{% url 'driver_action' driver.id 'suspend' %}" class="btn btn-sm" style="background:rgba(255,136,0,0.1);color:var(--orange-warn);border:1px solid rgba(255,136,0,0.25);font-size:0.7rem;font-family:var(--font-display);padding:0.3rem 0.6rem;border-radius:6px;" title="Suspend">
+                    <i class="bi bi-pause-circle"></i>
+                  </a>
+                  {% elif driver.status in 'rejected,suspended' %}
+                  <a href="{% url 'driver_action' driver.id 'activate' %}" class="btn btn-sm" style="background:rgba(0,255,136,0.1);color:var(--accent);border:1px solid rgba(0,255,136,0.25);font-size:0.7rem;font-family:var(--font-display);padding:0.3rem 0.6rem;border-radius:6px;" title="Activate">
+                    <i class="bi bi-play-circle"></i>
+                  </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="10" style="text-align:center;padding:3rem;color:var(--text-muted);">
+                <i class="bi bi-people" style="font-size:2.5rem;display:block;margin-bottom:0.75rem;opacity:0.4;"></i>
+                No drivers found{% if search %} matching "{{ search }}"{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if drivers %}
+      <div style="padding:0.75rem 1.5rem;border-top:1px solid var(--glass-border);font-size:0.8rem;color:var(--text-muted);">
+        Showing {{ drivers|length }} driver{{ drivers|length|pluralize }}
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

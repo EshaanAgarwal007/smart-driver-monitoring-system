@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ profile.full_name }} — Driver Detail — AVALON MOTORS{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <div class="dashboard-sidebar" id="sidebar">
+    <div style="padding:1.5rem 1.5rem 0.5rem;">
+      <div style="font-size:0.75rem;color:var(--text-muted);">Administrator</div>
+      <div style="font-family:var(--font-display);font-size:0.9rem;font-weight:700;margin-top:3px;">{{ request.user.username|upper }}</div>
+    </div>
+    <div class="divider-glow mx-3 my-2"></div>
+    <div class="sidebar-section-title">Control Center</div>
+    <a href="{% url 'admin_dashboard' %}" class="sidebar-nav-item"><i class="bi bi-speedometer2"></i> Dashboard</a>
+    <a href="{% url 'admin_drivers' %}" class="sidebar-nav-item active"><i class="bi bi-people-fill"></i> Manage Drivers</a>
+    <div class="sidebar-section-title">System</div>
+    <a href="{% url 'logout' %}" class="sidebar-nav-item" style="color:var(--red-alert);"><i class="bi bi-box-arrow-right"></i> Sign Out</a>
+  </div>
+
+  <div class="dashboard-main">
+
+    <!-- Breadcrumb -->
+    <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1.5rem;">
+      <a href="{% url 'admin_drivers' %}" style="color:var(--cyan);">Drivers</a>
+      <i class="bi bi-chevron-right mx-2" style="font-size:0.7rem;"></i>
+      <span>{{ profile.full_name }}</span>
+    </div>
+
+    <!-- Profile Header -->
+    <div class="glass-card p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-4">
+          <!-- Avatar initials -->
+          <div style="width:72px;height:72px;border-radius:16px;background:linear-gradient(135deg,var(--electric),var(--cyan));display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.6rem;font-weight:900;color:white;flex-shrink:0;box-shadow:0 0 20px var(--cyan-glow);">
+            {{ profile.full_name|slice:":1"|upper }}
+          </div>
+          <div>
+            <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:900;letter-spacing:0.04em;margin:0;">{{ profile.full_name|upper }}</h2>
+            <div style="font-size:0.85rem;color:var(--text-muted);margin-top:3px;">{{ profile.user.email }}</div>
+            <div class="d-flex gap-2 mt-2 flex-wrap">
+              <span class="badge-avalon badge-{{ profile.status }}">{{ profile.get_status_display }}</span>
+              <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--cyan);background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.2);padding:0.25em 0.7em;border-radius:6px;">{{ profile.vehicle_number }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          {% if profile.status == 'pending' %}
+            <a href="{% url 'driver_action' profile.id 'approve' %}" class="avalon-btn-primary d-inline-flex align-items-center gap-1" style="font-size:0.78rem;"><i class="bi bi-check-circle-fill"></i> APPROVE</a>
+            <a href="{% url 'driver_action' profile.id 'reject' %}" class="avalon-btn-danger d-inline-flex align-items-center gap-1" style="font-size:0.78rem;"><i class="bi bi-x-circle-fill"></i> REJECT</a>
+          {% elif profile.status == 'approved' %}
+            <a href="{% url 'driver_action' profile.id 'suspend' %}" class="avalon-btn-ghost d-inline-flex align-items-center gap-1" style="font-size:0.78rem;"><i class="bi bi-pause-circle-fill"></i> SUSPEND</a>
+          {% else %}
+            <a href="{% url 'driver_action' profile.id 'activate' %}" class="avalon-btn-primary d-inline-flex align-items-center gap-1" style="font-size:0.78rem;"><i class="bi bi-play-circle-fill"></i> ACTIVATE</a>
+          {% endif %}
+          <a href="{% url 'admin_drivers' %}" class="avalon-btn-ghost d-inline-flex align-items-center gap-1" style="font-size:0.78rem;"><i class="bi bi-arrow-left"></i> BACK</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-lg-3">
+        <div class="stat-widget stat-cyan">
+          <div class="stat-value val-cyan">{{ total_sessions }}</div>
+          <div class="stat-label">Total Sessions</div>
+          <i class="bi bi-play-circle-fill stat-icon" style="color:var(--cyan);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-widget stat-orange">
+          <div class="stat-value val-orange">{{ total_alerts }}</div>
+          <div class="stat-label">Total Alerts</div>
+          <i class="bi bi-bell-fill stat-icon" style="color:var(--orange-warn);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-widget stat-green">
+          <div class="stat-value val-green">{{ avg_safety|floatformat:0 }}%</div>
+          <div class="stat-label">Avg Safety Score</div>
+          <i class="bi bi-shield-fill-check stat-icon" style="color:var(--accent);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-widget" style="background:rgba(0,212,255,0.06);border:1px solid var(--glass-border);">
+          <div class="stat-value" style="font-size:1.1rem;color:var(--text-primary);">{{ profile.age }} yrs</div>
+          <div class="stat-label">Age</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;">DOB: {{ profile.date_of_birth }}</div>
+          <i class="bi bi-person-fill stat-icon"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Driver Info -->
+      <div class="col-lg-4">
+        <div class="glass-card p-4 h-100">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1rem;">Driver Details</div>
+          <div class="d-flex flex-column gap-2">
+            {% for label, val in profile_info %}{% endfor %}
+            <div class="detail-row"><span class="detail-label">Mobile</span><span class="detail-val">{{ profile.mobile }}</span></div>
+            <div class="detail-row"><span class="detail-label">Address</span><span class="detail-val" style="font-size:0.8rem;">{{ profile.address|truncatechars:60 }}</span></div>
+            <div class="detail-row"><span class="detail-label">License</span><span class="detail-val font-mono">{{ profile.license_number }}</span></div>
+            <div class="detail-row"><span class="detail-label">Vehicle</span><span class="detail-val">{{ profile.get_vehicle_brand_display }} {{ profile.vehicle_model }}</span></div>
+            <div class="detail-row"><span class="detail-label">Reg. No.</span><span class="detail-val font-mono text-cyan">{{ profile.vehicle_number }}</span></div>
+            <div class="detail-row"><span class="detail-label">Registered</span><span class="detail-val">{{ profile.created_at|date:"M d, Y" }}</span></div>
+            <div class="detail-row"><span class="detail-label">Last Active</span><span class="detail-val">{{ profile.last_active|date:"M d, Y H:i"|default:"Never" }}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+  <div style="
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+  ">
+
+      <h5 style="margin-bottom:15px;">Driver Live Location</h5>
+
+      {% if latest_location %}
+
+          <p><strong>Latitude:</strong> {{ latest_location.latitude }}</p>
+
+          <p><strong>Longitude:</strong> {{ latest_location.longitude }}</p>
+
+          <p><strong>Updated:</strong> {{ latest_location.timestamp }}</p>
+
+          <a target="_blank"
+             href="https://www.google.com/maps?q={{ latest_location.latitude }},{{ latest_location.longitude }}"
+             class="btn btn-primary">
+             Open in Google Maps
+          </a>
+
+      {% else %}
+
+          <p>No location available</p>
+
+      {% endif %}
+  </div>
+</div>
+      <!-- Recent Sessions -->
+      <div class="col-lg-8">
+        <div class="glass-card p-4 mb-4">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1rem;">Recent Sessions</div>
+          {% if sessions %}
+          <table class="avalon-table">
+            <thead><tr><th>Date</th><th>Start</th><th>Duration</th><th>Alerts</th><th>Safety</th><th>Status</th></tr></thead>
+            <tbody>
+              {% for s in sessions %}
+              <tr>
+                <td style="font-size:0.82rem;">{{ s.start_time|date:"M d, Y" }}</td>
+                <td style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted);">{{ s.start_time|date:"H:i" }}</td>
+                <td style="font-family:var(--font-mono);font-size:0.82rem;color:var(--cyan);">{{ s.get_duration_display }}</td>
+                <td style="font-family:var(--font-mono);font-size:0.85rem;color:{% if s.total_alerts > 5 %}var(--red-alert){% elif s.total_alerts > 0 %}var(--orange-warn){% else %}var(--accent){% endif %};">{{ s.total_alerts }}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <div style="flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+                      <div style="height:100%;width:{{ s.safety_score }}%;background:{% if s.safety_score > 70 %}var(--accent){% elif s.safety_score > 40 %}var(--orange-warn){% else %}var(--red-alert){% endif %};border-radius:2px;"></div>
+                    </div>
+                    <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);min-width:36px;">{{ s.safety_score|floatformat:0 }}%</span>
+                  </div>
+                </td>
+                <td><span class="badge-avalon badge-{% if s.status == 'completed' %}approved{% elif s.status == 'active' %}active{% else %}medium{% endif %}">{{ s.status|upper }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-4" style="color:var(--text-muted);font-size:0.88rem;">No sessions recorded yet</div>
+          {% endif %}
+        </div>
+
+        <!-- Recent Alerts -->
+        <div class="glass-card p-4">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1rem;">Recent Alerts</div>
+          {% if alerts %}
+          <table class="avalon-table">
+            <thead><tr><th>Time</th><th>Type</th><th>Severity</th><th>Duration</th><th>EAR</th></tr></thead>
+            <tbody>
+              {% for a in alerts %}
+              <tr>
+                <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted);">{{ a.timestamp|date:"M d H:i:s" }}</td>
+                <td style="font-size:0.82rem;">{{ a.get_alert_type_display }}</td>
+                <td><span class="badge-avalon badge-{{ a.severity }}">{{ a.severity|upper }}</span></td>
+                <td style="font-family:var(--font-mono);font-size:0.8rem;color:var(--cyan);">{{ a.duration_seconds|floatformat:1 }}s</td>
+                <td style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted);">{{ a.ear_value|default:"—"|floatformat:3 }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div class="text-center py-4" style="color:var(--text-muted);font-size:0.88rem;"><i class="bi bi-shield-check" style="font-size:1.8rem;color:var(--accent);display:block;margin-bottom:6px;"></i>No alerts recorded</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.detail-row { display:flex; justify-content:space-between; align-items:flex-start; padding:0.55rem 0; border-bottom:1px solid rgba(255,255,255,0.04); gap:12px; }
+.detail-label { font-size:0.78rem; color:var(--text-muted); flex-shrink:0; }
+.detail-val { font-size:0.82rem; color:var(--text-secondary); text-align:right; }
+.detail-val.font-mono { font-family:var(--font-mono); }
+.detail-val.text-cyan { color:var(--cyan); }
+</style>
+<div class="glass-card p-4 mt-4">
+
+    <h5 class="mb-3">Driver Locations</h5>
+
+    {% if locations %}
+
+        <table class="table">
+
+            <thead>
+                <tr>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>Location</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for loc in locations %}
+
+                <tr>
+                    <td>{{ loc.latitude }}</td>
+                    <td>{{ loc.longitude }}</td>
+                    <td>{{ loc.location_name }}</td>
+                    <td>{{ loc.timestamp }}</td>
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <p>No location history found.</p>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

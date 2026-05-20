@@ -1,0 +1,9 @@
+Django>=4.2,<5.0
+Pillow>=10.0.0
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+
+# Optional: for OpenCV-based server-side detection (fallback)
+# opencv-python>=4.8.0
+# mediapipe>=0.10.0
+# numpy>=1.24.0

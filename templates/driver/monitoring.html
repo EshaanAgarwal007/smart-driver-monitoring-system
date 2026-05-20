@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Live Monitoring — AVALON MOTORS{% endblock %}
+<h1 style="color:red;">MONITORING PAGE TEST</h1>
+{% block extra_head %}
+<style>
+.monitoring-grid { display:grid; grid-template-columns:1fr 320px; gap:1.5rem; }
+@media(max-width:991px) { .monitoring-grid { grid-template-columns:1fr; } }
+.eye-row { display:flex; gap:16px; justify-content:center; margin-bottom:1rem; }
+.meter-bar { height:8px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; margin-top:6px; }
+.meter-fill { height:100%; border-radius:4px; transition:width 0.2s ease; }
+.alert-log-item {
+  padding:0.6rem 0.9rem;
+  border-radius:8px;
+  background:rgba(255,255,255,0.02);
+  border-left:3px solid var(--glass-border);
+  font-size:0.78rem;
+  animation:fadeInUp 0.3s ease;
+  margin-bottom:6px;
+}
+.alert-log-item.critical { border-left-color:var(--red-alert); }
+.alert-log-item.high     { border-left-color:var(--orange-warn); }
+.alert-log-item.medium   { border-left-color:var(--yellow-warn); }
+#alarmBar {
+  display:none;
+  position:fixed; top:72px; left:0; right:0;
+  background:linear-gradient(90deg,#cc0022,var(--red-alert),#cc0022);
+  background-size:200% 100%;
+  animation:gradShift 1s linear infinite;
+  z-index:999; padding:0.8rem;
+  text-align:center;
+  font-family:var(--font-display);
+  font-size:1rem; font-weight:900;
+  letter-spacing:0.15em;
+  color:white;
+  box-shadow:0 4px 30px rgba(255,34,68,0.8);
+}
+#alarmBar.show { display:block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Alarm Bar -->
+<div id="alarmBar">
+  ⚠ WARNING — DRIVER FATIGUE DETECTED — PLEASE STOP AND REST ⚠
+</div>
+
+<div class="monitoring-page">
+  <div class="container-fluid px-3 px-md-4 py-4" style="padding-top:5rem!important;">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.7rem;font-weight:700;letter-spacing:0.2em;color:var(--cyan);">LIVE MONITORING SESSION</div>
+        <h1 style="font-family:var(--font-display);font-size:1.4rem;font-weight:900;letter-spacing:0.04em;margin-top:2px;">
+          {{ profile.full_name|upper }} · <span style="color:var(--text-muted);font-size:1rem;">{{ profile.vehicle_number }}</span>
+        </h1>
+      </div>
+      <div class="d-flex gap-2">
+        <div id="sessionTimer" class="hud-badge" style="font-family:var(--font-mono);font-size:1rem;color:var(--accent);">00:00:00</div>
+        <button id="endSessionBtn" class="avalon-btn-danger d-inline-flex align-items-center gap-2" style="font-size:0.8rem;">
+          <i class="bi bi-stop-circle-fill"></i> END SESSION
+        </button>
+      </div>
+    </div>
+
+    <div class="monitoring-grid">
+
+      <!-- ── LEFT: Video Feed ── -->
+      <div>
+        <div class="video-wrapper" id="videoWrapper">
+          <video id="videoFeed" autoplay muted playsinline></video>
+          <canvas id="canvasOverlay"></canvas>
+
+          <!-- HUD Overlays -->
+          <div class="hud-overlay">
+            <div class="hud-badge hud-live">LIVE</div>
+            <div class="hud-badge" id="hudFps" style="color:var(--text-secondary);">-- FPS</div>
+            <div class="hud-badge" id="hudEar" style="color:var(--cyan);">EAR: --</div>
+          </div>
+
+          <!-- Alert overlay -->
+          <div class="alert-overlay" id="alertOverlay">
+            <div class="alert-banner" id="alertBannerText">⚠ FATIGUE DETECTED</div>
+          </div>
+        </div>
+
+        <!-- Eyes status row -->
+        <div class="d-flex justify-content-center gap-4 mt-3">
+          <div class="text-center">
+            <div style="font-family:var(--font-display);font-size:0.65rem;color:var(--text-muted);margin-bottom:6px;">LEFT EYE</div>
+            <div class="eye-indicator" id="leftEye"><div class="eye-pupil"></div></div>
+          </div>
+          <div class="text-center">
+            <div style="font-family:var(--font-display);font-size:0.65rem;color:var(--text-muted);margin-bottom:6px;">RIGHT EYE</div>
+            <div class="eye-indicator" id="rightEye"><div class="eye-pupil"></div></div>
+          </div>
+        </div>
+
+        <!-- Camera controls -->
+        <div class="d-flex justify-content-center gap-3 mt-3">
+          <button id="startCameraBtn" class="avalon-btn-primary d-inline-flex align-items-center gap-2" style="font-size:0.8rem;">
+            <i class="bi bi-camera-video-fill"></i> START CAMERA
+          </button>
+          <button id="stopCameraBtn" class="avalon-btn-ghost d-inline-flex align-items-center gap-2" style="font-size:0.8rem;display:none!important;">
+            <i class="bi bi-camera-video-off"></i> PAUSE
+          </button>
+        </div>
+      </div>
+
+      <!-- ── RIGHT: Metrics Panel ── -->
+      <div>
+
+        <!-- Safety Score -->
+        <div class="glass-card p-3 mb-3">
+          <div style="font-family:var(--font-display);font-size:0.65rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.5rem;">Safety Score</div>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <div id="safetyScore" style="font-family:var(--font-display);font-size:2.4rem;font-weight:900;color:var(--accent);">100</div>
+            <div style="font-size:1rem;color:var(--text-muted);">/ 100</div>
+          </div>
+          <div class="meter-bar mt-2">
+            <div class="meter-fill" id="safetyBar" style="width:100%;background:var(--accent);"></div>
+          </div>
+        </div>
+
+        <!-- EAR Meter -->
+        <div class="metric-box">
+          <div class="metric-label">Eye Aspect Ratio (EAR)</div>
+          <div class="metric-value" id="earDisplay" style="color:var(--cyan);">0.000</div>
+          <div class="meter-bar">
+            <div class="meter-fill" id="earBar" style="width:50%;background:var(--cyan);"></div>
+          </div>
+          <div style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">Threshold: 0.25 · Closure: &lt;0.20</div>
+        </div>
+
+        <!-- Frame Counter -->
+        <div class="metric-box">
+          <div class="metric-label">Closed Frame Count</div>
+          <div class="metric-value" id="frameCount" style="color:var(--yellow-warn);">0 / 15</div>
+          <div class="meter-bar">
+            <div class="meter-fill" id="frameBar" style="width:0%;background:var(--yellow-warn);"></div>
+          </div>
+        </div>
+
+        <!-- Session Stats -->
+        <div class="metric-box">
+          <div class="metric-label">Session Alerts</div>
+          <div class="metric-value" id="sessionAlerts" style="color:var(--orange-warn);">0</div>
+        </div>
+
+        <!-- GPS -->
+        <div class="metric-box">
+          <div class="metric-label">GPS Location</div>
+          <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--text-secondary);margin-top:4px;" id="gpsDisplay">Acquiring...</div>
+        </div>
+
+        <!-- Alert Log -->
+        <div class="glass-card p-3" style="max-height:220px;overflow-y:auto;">
+          <div style="font-family:var(--font-display);font-size:0.65rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.75rem;">Alert Log</div>
+          <div id="alertLog">
+            <div style="text-align:center;font-size:0.8rem;color:var(--text-muted);padding:1rem 0;">No alerts yet</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Hidden session data -->
+<div id="sessionData" data-session-id="{{ session.id }}"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<!-- MediaPipe Face Mesh -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="{% static 'js/drowsiness.js' %}"></script>
+
+<script>
+
+navigator.geolocation.getCurrentPosition(function(position) {
+
+    console.log(position.coords.latitude, position.coords.longitude);
+
+    fetch('/api/save-location/', {
+
+        method: 'POST',
+
+        headers: {
+            'Content-Type': 'application/json',
+        },
+
+        body: JSON.stringify({
+
+            latitude: position.coords.latitude,
+
+            longitude: position.coords.longitude,
+
+            location_name: 'Driver Live Location'
+
+        })
+
+    })
+
+    .then(response => response.json())
+
+    .then(data => console.log(data))
+
+    .catch(error => console.log(error));
+
+});
+
+
+</script>
+<script>
+
+window.onload = function () {
+
+    if (navigator.geolocation) {
+
+        navigator.geolocation.getCurrentPosition(
+
+            function(position) {
+
+                console.log("Latitude:", position.coords.latitude);
+
+                console.log("Longitude:", position.coords.longitude);
+
+                fetch('/api/save-location/', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+
+                    body: JSON.stringify({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        location_name: 'Driver Live Location'
+                    })
+
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Saved:", data);
+                });
+
+            },
+
+            function(error) {
+                alert("Location Permission Denied");
+                console.log(error);
+            }
+
+        );
+
+    } else {
+
+        alert("Geolocation not supported");
+
+    }
+
+};
+
+</script>
+
+<script>
+
+alert("Script Running");
+
+navigator.geolocation.getCurrentPosition(
+
+function(position){
+
+    alert("Latitude: " + position.coords.latitude);
+
+    alert("Longitude: " + position.coords.longitude);
+
+},
+
+function(error){
+
+    alert("ERROR: " + error.message);
+
+}
+
+);
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard — {{ profile.full_name }} — AVALON MOTORS{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Sidebar -->
+  <div class="dashboard-sidebar" id="sidebar">
+    <div style="padding:1.5rem 1.5rem 0.5rem;">
+      <div style="font-size:0.82rem;color:var(--text-muted);">Signed in as</div>
+      <div style="font-family:var(--font-display);font-size:0.9rem;font-weight:700;color:var(--text-primary);margin-top:3px;">{{ profile.full_name }}</div>
+      <div class="mt-1">
+        <span class="badge-avalon badge-{{ profile.status }}">{{ profile.get_status_display }}</span>
+      </div>
+    </div>
+    <div class="divider-glow mx-3 my-2"></div>
+
+    <div class="sidebar-section-title">Navigation</div>
+    <a href="{% url 'driver_dashboard' %}" class="sidebar-nav-item active">
+      <i class="bi bi-grid-1x2-fill"></i> Dashboard
+    </a>
+    <a href="{% url 'start_monitoring' %}" class="sidebar-nav-item">
+      <i class="bi bi-eye-fill"></i> Start Monitoring
+    </a>
+    <a href="{% url 'monitoring_history' %}" class="sidebar-nav-item">
+      <i class="bi bi-clock-history"></i> History & Reports
+    </a>
+
+    <div class="sidebar-section-title">Account</div>
+    <a href="{% url 'logout' %}" class="sidebar-nav-item" style="color:var(--red-alert);">
+      <i class="bi bi-box-arrow-right"></i> Sign Out
+    </a>
+  </div>
+
+  <!-- Main Content -->
+  <div class="dashboard-main">
+    
+
+    <div class="glass-card p-3 mb-4">
+        
+        <button onclick="saveLocation()" class="btn btn-primary">
+            Share Live Location
+        </button>
+
+        <div id="locationStatus" class="mt-2 text-info"></div>
+
+    </div>
+
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.7rem;font-weight:700;letter-spacing:0.2em;color:var(--cyan);text-transform:uppercase;">Driver Portal</div>
+        <h1 style="font-family:var(--font-display);font-size:1.6rem;font-weight:900;letter-spacing:0.04em;margin-top:3px;">
+          WELCOME BACK, <span style="color:var(--cyan);">{{ profile.full_name|upper|truncatechars:16 }}</span>
+        </h1>
+      </div>
+      {% if profile.status == 'approved' %}
+      <a href="{% url 'start_monitoring' %}" class="avalon-btn-primary d-inline-flex align-items-center gap-2" style="font-size:0.82rem;">
+        <i class="bi bi-play-circle-fill"></i> START SESSION
+      </a>
+      {% endif %}
+    </div>
+
+    <!-- Status alert if not approved -->
+    {% if profile.status != 'approved' %}
+    <div class="glass-card p-3 mb-4 d-flex align-items-center gap-3" style="border-color:rgba(255,204,0,0.3);">
+      <i class="bi bi-hourglass-split" style="font-size:1.5rem;color:var(--yellow-warn);"></i>
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.8rem;font-weight:700;color:var(--yellow-warn);">ACCOUNT {{ profile.status|upper }}</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);">
+          {% if profile.status == 'pending' %}Your registration is awaiting admin approval. You'll be able to start monitoring once approved.
+          {% elif profile.status == 'rejected' %}Your application was rejected. Please contact the administrator for more information.
+          {% elif profile.status == 'suspended' %}Your account has been temporarily suspended. Contact support for assistance.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-xl-3">
+        <div class="stat-widget stat-cyan">
+          <div class="stat-value val-cyan">{{ total_sessions }}</div>
+          <div class="stat-label">Total Sessions</div>
+          <i class="bi bi-play-circle-fill stat-icon" style="color:var(--cyan);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-widget stat-orange">
+          <div class="stat-value val-orange">{{ total_alerts }}</div>
+          <div class="stat-label">Total Alerts</div>
+          <i class="bi bi-bell-fill stat-icon" style="color:var(--orange-warn);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-widget stat-green">
+          <div class="stat-value val-green">{{ avg_safety }}%</div>
+          <div class="stat-label">Avg Safety Score</div>
+          <i class="bi bi-shield-fill-check stat-icon" style="color:var(--accent);"></i>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-widget" style="background:linear-gradient(135deg,rgba(0,212,255,0.08),rgba(0,102,255,0.05));border:1px solid var(--glass-border);">
+          <div class="stat-value" style="font-size:1.4rem;color:var(--text-primary);">{{ profile.vehicle_brand|upper }}</div>
+          <div class="stat-label">Vehicle</div>
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-top:2px;">{{ profile.vehicle_model }}</div>
+          <i class="bi bi-car-front-fill stat-icon"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Alert Activity Chart -->
+      <div class="col-lg-7">
+        <div class="glass-card p-4 h-100">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1.2rem;">7-Day Alert Activity</div>
+          <canvas id="alertChart" height="180"></canvas>
+        </div>
+      </div>
+
+      <!-- Vehicle Info -->
+      <div class="col-lg-5">
+        <div class="glass-card p-4 h-100">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1.2rem;">Driver Profile</div>
+          <div class="d-flex flex-column gap-2">
+            {% for label, value in profile_data %}{% endfor %}
+            <div style="display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+              <span style="font-size:0.82rem;color:var(--text-muted);">Vehicle No.</span>
+              <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--cyan);">{{ profile.vehicle_number }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+              <span style="font-size:0.82rem;color:var(--text-muted);">License No.</span>
+              <span style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text-secondary);">{{ profile.license_number }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+              <span style="font-size:0.82rem;color:var(--text-muted);">Mobile</span>
+              <span style="font-size:0.82rem;color:var(--text-secondary);">{{ profile.mobile }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+              <span style="font-size:0.82rem;color:var(--text-muted);">Email</span>
+              <span style="font-size:0.82rem;color:var(--text-secondary);">{{ profile.user.email|truncatechars:22 }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:0.6rem 0;">
+              <span style="font-size:0.82rem;color:var(--text-muted);">Status</span>
+              <span class="badge-avalon badge-{{ profile.status }}">{{ profile.get_status_display }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Sessions & Alerts -->
+    <div class="row g-4 mt-1">
+      <div class="col-lg-6">
+        <div class="glass-card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;">Recent Sessions</div>
+            <a href="{% url 'monitoring_history' %}" style="font-size:0.78rem;color:var(--cyan);">View all</a>
+          </div>
+          {% if recent_sessions %}
+          <div class="d-flex flex-column gap-2">
+            {% for s in recent_sessions %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:0.7rem;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid rgba(255,255,255,0.04);">
+              <div>
+                <div style="font-size:0.85rem;font-weight:600;">{{ s.start_time|date:"M d, Y" }}</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">{{ s.start_time|date:"H:i" }} · {{ s.get_duration_display }}</div>
+              </div>
+              <div class="text-end">
+                <div style="font-size:0.82rem;color:{% if s.total_alerts > 3 %}var(--red-alert){% elif s.total_alerts > 0 %}var(--orange-warn){% else %}var(--accent){% endif %};">{{ s.total_alerts }} alerts</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">{{ s.safety_score|floatformat:0 }}% safe</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-4" style="color:var(--text-muted);font-size:0.88rem;">No sessions yet. Start your first monitoring session.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="glass-card p-4">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;margin-bottom:1rem;">Recent Alerts</div>
+          {% if recent_alerts %}
+          <div class="d-flex flex-column gap-2">
+            {% for a in recent_alerts %}
+            <div style="display:flex;align-items:center;gap:12px;padding:0.65rem;background:rgba(255,255,255,0.02);border-radius:8px;border-left:3px solid {% if a.severity == 'critical' %}var(--red-alert){% elif a.severity == 'high' %}var(--orange-warn){% else %}var(--yellow-warn){% endif %};">
+              <div style="flex:1;">
+                <div style="font-size:0.83rem;font-weight:600;">{{ a.get_alert_type_display }}</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);">{{ a.timestamp|date:"M d H:i:s" }}</div>
+              </div>
+              <span class="badge-avalon badge-{{ a.severity }}">{{ a.severity|upper }}</span>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center py-4" style="color:var(--text-muted);font-size:0.88rem;"><i class="bi bi-shield-check" style="font-size:2rem;display:block;color:var(--accent);margin-bottom:0.5rem;"></i>No alerts recorded. Great driving!</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const dailyData = {{ daily_alerts|safe }};
+const ctx = document.getElementById('alertChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: dailyData.map(d => d.day),
+    datasets: [{
+      label: 'Alerts',
+      data: dailyData.map(d => d.count),
+      backgroundColor: dailyData.map(d => d.count > 3 ? 'rgba(255,34,68,0.6)' : d.count > 0 ? 'rgba(255,136,0,0.5)' : 'rgba(0,212,255,0.25)'),
+      borderColor: dailyData.map(d => d.count > 3 ? '#ff2244' : d.count > 0 ? '#ff8800' : '#00d4ff'),
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { color: '#4a6480', font: { family: "'Share Tech Mono'" } }, grid: { color: 'rgba(0,212,255,0.06)' } },
+      x: { ticks: { color: '#8ca8c8', font: { family: "'Share Tech Mono'" } }, grid: { display: false } }
+    }
+  }
+});
+</script>
+
+<script>
+
+function saveLocation() {
+
+    if (navigator.geolocation) {
+
+        navigator.geolocation.getCurrentPosition(function(position) {
+
+            fetch('/api/save-location/', {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+
+                body: JSON.stringify({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    location_name: 'Driver Live Location'
+                })
+
+            })
+
+            .then(response => response.json())
+
+            .then(data => {
+
+                document.getElementById('locationStatus').innerHTML =
+                    "Location Saved Successfully";
+
+            });
+
+        });
+
+    } else {
+
+        alert("Geolocation not supported");
+
+    }
+
+}
+
+</script>
+{% endblock %}

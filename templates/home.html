@@ -1,0 +1,390 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AVALON MOTORS — AI Driver Safety Platform{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════ HERO ══════════════════════ -->
+<section class="hero-section">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-scan-line"></div>
+
+  <div class="container py-5">
+    <div class="row align-items-center g-5">
+
+      <!-- Left: copy -->
+      <div class="col-lg-6">
+        <div class="hero-content fade-in-up">
+          <div class="hero-eyebrow">AI-POWERED SAFETY SYSTEM</div>
+
+          <h1 class="hero-title">
+            DRIVE SAFE.<br>
+            DRIVE <span class="gradient-text">SMART</span>.<br>
+            DRIVE ALIVE.
+          </h1>
+
+          <p class="hero-desc">
+            Avalon Motors deploys military-grade AI to watch over your drivers every second.
+            Real-time fatigue detection, intelligent alerts, and instant emergency response —
+            because every journey deserves protection.
+          </p>
+
+          <div class="d-flex flex-wrap gap-3">
+            <a href="{% url 'register' %}" class="avalon-btn-primary d-inline-flex align-items-center gap-2" style="font-size:0.85rem;padding:0.8rem 2rem;">
+              <i class="bi bi-shield-fill-check"></i>
+              <span>Get Protected</span>
+            </a>
+            <a href="{% url 'login' %}" class="avalon-btn-ghost d-inline-flex align-items-center gap-2" style="font-size:0.85rem;padding:0.8rem 2rem;">
+              <i class="bi bi-box-arrow-in-right"></i>
+              <span>Sign In</span>
+            </a>
+          </div>
+
+          <div class="hero-stats">
+            <div>
+              <div class="hero-stat-value">{{ stats.total_drivers|default:"500" }}+</div>
+              <div class="hero-stat-label">Drivers Protected</div>
+            </div>
+            <div>
+              <div class="hero-stat-value">{{ stats.alerts_prevented|default:"12K" }}+</div>
+              <div class="hero-stat-label">Alerts Triggered</div>
+            </div>
+            <div>
+              <div class="hero-stat-value">{{ stats.uptime }}</div>
+              <div class="hero-stat-label">System Uptime</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: car visual -->
+      <div class="col-lg-6 d-none d-lg-flex justify-content-center">
+        <div class="animate-float" style="width:100%;max-width:560px;position:relative;">
+          <!-- SVG Car Illustration -->
+          <svg viewBox="0 0 560 320" xmlns="http://www.w3.org/2000/svg" style="width:100%;filter:drop-shadow(0 0 40px rgba(0,212,255,0.3))">
+            <defs>
+              <linearGradient id="carBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0a1628"/>
+                <stop offset="50%" stop-color="#071630"/>
+                <stop offset="100%" stop-color="#040f22"/>
+              </linearGradient>
+              <linearGradient id="carGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="rgba(0,212,255,0.3)"/>
+                <stop offset="100%" stop-color="rgba(0,102,255,0.1)"/>
+              </linearGradient>
+              <linearGradient id="headlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00d4ff"/>
+                <stop offset="100%" stop-color="#0066ff"/>
+              </linearGradient>
+              <filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+              <filter id="glow2"><feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+                <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <!-- Reflection -->
+            <ellipse cx="280" cy="285" rx="200" ry="18" fill="rgba(0,212,255,0.06)"/>
+            <!-- Body -->
+            <path d="M60 210 Q55 170 120 155 L180 110 Q220 90 280 88 Q340 88 380 110 L440 155 Q505 170 500 210 L500 240 Q500 252 488 252 L72 252 Q60 252 60 240 Z" fill="url(#carBody)" stroke="rgba(0,212,255,0.3)" stroke-width="1.5"/>
+            <!-- Side line detail -->
+            <path d="M70 200 Q200 188 280 188 Q360 188 490 200" fill="none" stroke="rgba(0,212,255,0.2)" stroke-width="1"/>
+            <!-- Windshield -->
+            <path d="M182 155 Q210 108 280 102 Q350 108 378 155 Z" fill="url(#carGlass)" stroke="rgba(0,212,255,0.4)" stroke-width="1.5"/>
+            <!-- Rear glass -->
+            <path d="M120 165 Q145 130 182 118 L182 155 Q145 160 120 165 Z" fill="url(#carGlass)" opacity="0.6" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+            <path d="M440 165 Q415 130 378 118 L378 155 Q415 160 440 165 Z" fill="url(#carGlass)" opacity="0.6" stroke="rgba(0,212,255,0.3)" stroke-width="1"/>
+            <!-- Headlights -->
+            <path d="M92 185 L140 180 L140 200 L88 200 Z" fill="url(#headlight)" opacity="0.9" filter="url(#glow)"/>
+            <path d="M468 185 L420 180 L420 200 L472 200 Z" fill="url(#headlight)" opacity="0.9" filter="url(#glow)"/>
+            <!-- Light beams -->
+            <path d="M88 192 L20 175 L25 195 Z" fill="rgba(0,212,255,0.15)" filter="url(#glow2)"/>
+            <path d="M472 192 L540 175 L535 195 Z" fill="rgba(0,212,255,0.15)" filter="url(#glow2)"/>
+            <!-- Wheels -->
+            <circle cx="160" cy="252" r="40" fill="#040f22" stroke="rgba(0,212,255,0.4)" stroke-width="2"/>
+            <circle cx="160" cy="252" r="28" fill="#020a18" stroke="rgba(0,212,255,0.2)" stroke-width="1.5"/>
+            <circle cx="160" cy="252" r="8" fill="var(--cyan,#00d4ff)" filter="url(#glow)"/>
+            <circle cx="400" cy="252" r="40" fill="#040f22" stroke="rgba(0,212,255,0.4)" stroke-width="2"/>
+            <circle cx="400" cy="252" r="28" fill="#020a18" stroke="rgba(0,212,255,0.2)" stroke-width="1.5"/>
+            <circle cx="400" cy="252" r="8" fill="var(--cyan,#00d4ff)" filter="url(#glow)"/>
+            <!-- Wheel spokes -->
+            <g stroke="rgba(0,212,255,0.3)" stroke-width="2">
+              <line x1="160" y1="224" x2="160" y2="280"/><line x1="132" y1="252" x2="188" y2="252"/>
+              <line x1="140" y1="232" x2="180" y2="272"/><line x1="180" y1="232" x2="140" y2="272"/>
+              <line x1="400" y1="224" x2="400" y2="280"/><line x1="372" y1="252" x2="428" y2="252"/>
+              <line x1="380" y1="232" x2="420" y2="272"/><line x1="420" y1="232" x2="380" y2="272"/>
+            </g>
+            <!-- AI scan dots -->
+            <g filter="url(#glow)">
+              <circle cx="280" cy="120" r="3" fill="#00d4ff" opacity="0.8"><animate attributeName="opacity" values="0.8;0.2;0.8" dur="2s" repeatCount="indefinite"/></circle>
+              <circle cx="240" cy="130" r="2" fill="#0066ff" opacity="0.6"><animate attributeName="opacity" values="0.6;0.1;0.6" dur="2.5s" repeatCount="indefinite"/></circle>
+              <circle cx="320" cy="130" r="2" fill="#0066ff" opacity="0.6"><animate attributeName="opacity" values="0.6;0.1;0.6" dur="3s" repeatCount="indefinite"/></circle>
+            </g>
+            <!-- AI scan grid on windshield -->
+            <g opacity="0.25" stroke="#00d4ff" stroke-width="0.5">
+              <line x1="200" y1="118" x2="200" y2="155"/><line x1="220" y1="108" x2="220" y2="155"/>
+              <line x1="240" y1="103" x2="240" y2="155"/><line x1="260" y1="100" x2="260" y2="155"/>
+              <line x1="280" y1="100" x2="280" y2="155"/><line x1="300" y1="100" x2="300" y2="155"/>
+              <line x1="320" y1="103" x2="320" y2="155"/><line x1="340" y1="108" x2="340" y2="155"/>
+              <line x1="360" y1="118" x2="360" y2="155"/>
+            </g>
+          </svg>
+
+          <!-- Floating HUD panels around car -->
+          <div class="car-hud-badge top-hud" style="position:absolute;top:-10px;right:0px;">
+            <div class="hud-badge" style="color:var(--accent)"><i class="bi bi-eye-fill me-1"></i>EYE TRACKING ACTIVE</div>
+          </div>
+          <div class="car-hud-badge" style="position:absolute;bottom:60px;left:-20px;">
+            <div class="hud-badge" style="color:var(--cyan)"><i class="bi bi-geo-alt-fill me-1"></i>GPS LOCK</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ ABOUT ══════════════════════ -->
+<section class="section-pad" id="about" style="background:linear-gradient(180deg,var(--navy) 0%,var(--navy-2) 100%);">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5 reveal">
+        <div class="section-eyebrow mb-3">About Avalon Motors</div>
+        <h2 class="section-title mb-4" style="font-size:clamp(1.8rem,4vw,2.8rem);">
+          THE FUTURE OF <br><span style="color:var(--cyan)">DRIVER SAFETY</span>
+        </h2>
+        <p style="color:var(--text-secondary);line-height:1.9;margin-bottom:1.5rem;">
+          Avalon Motors is an AI-first safety technology platform built to eliminate drowsiness-related accidents.
+          We combine cutting-edge computer vision, real-time analytics, and intelligent alerting to create an
+          unbreakable safety net around every driver.
+        </p>
+        <p style="color:var(--text-secondary);line-height:1.9;">
+          Our system processes thousands of facial landmark data points per second, detecting the earliest
+          signs of fatigue before they become dangerous — protecting lives one journey at a time.
+        </p>
+        <div class="mt-4 d-flex gap-4">
+          <div>
+            <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:900;color:var(--cyan)">98.7%</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">Detection Accuracy</div>
+          </div>
+          <div>
+            <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:900;color:var(--accent)"><50ms</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">Response Latency</div>
+          </div>
+          <div>
+            <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:900;color:var(--orange-warn)">24/7</div>
+            <div style="font-size:0.8rem;color:var(--text-muted)">Live Monitoring</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7 reveal">
+        <div class="row g-3">
+          
+          <div class="col-6">
+            <div class="glass-card p-3 h-100">
+              <div style="font-size:1.6rem;color:var(--cyan);margin-bottom:0.75rem;"><i class="bi bi-eye-fill"></i></div>
+              <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:700;letter-spacing:0.08em;margin-bottom:0.4rem;">Eye Tracking AI</div>
+              <div style="font-size:0.82rem;color:var(--text-secondary);">Monitors 468 facial landmarks with MediaPipe Face Mesh at 30 FPS.</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="glass-card p-3 h-100">
+              <div style="font-size:1.6rem;color:var(--red-alert);margin-bottom:0.75rem;"><i class="bi bi-lightning-fill"></i></div>
+              <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:700;letter-spacing:0.08em;margin-bottom:0.4rem;">Instant Alerts</div>
+              <div style="font-size:0.82rem;color:var(--text-secondary);">Multi-stage alarm escalation with vibration and audio feedback.</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="glass-card p-3 h-100">
+              <div style="font-size:1.6rem;color:var(--accent);margin-bottom:0.75rem;"><i class="bi bi-geo-alt-fill"></i></div>
+              <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:700;letter-spacing:0.08em;margin-bottom:0.4rem;">GPS Tracking</div>
+              <div style="font-size:0.82rem;color:var(--text-secondary);">Real-time location capture and emergency geo-fencing.</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="glass-card p-3 h-100">
+              <div style="font-size:1.6rem;color:var(--orange-warn);margin-bottom:0.75rem;"><i class="bi bi-graph-up-arrow"></i></div>
+              <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:700;letter-spacing:0.08em;margin-bottom:0.4rem;">Smart Analytics</div>
+              <div style="font-size:0.82rem;color:var(--text-secondary);">Driver safety scores, trend reports and fleet-wide dashboards.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ FEATURES ══════════════════════ -->
+<section class="section-pad" id="features" style="background:var(--navy);">
+  <div class="container">
+    <div class="text-center mb-5 reveal">
+      <div class="section-eyebrow mb-3 justify-content-center">AI Safety Features</div>
+      <h2 class="section-title" style="font-size:clamp(1.8rem,4vw,2.8rem);">
+        EVERY THREAT.<br><span style="color:var(--cyan)">DETECTED. NEUTRALIZED.</span>
+      </h2>
+    </div>
+
+    <div class="row g-4">
+      {% for f in features_list %}{% endfor %}
+
+      <div class="col-md-6 col-lg-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="bi bi-eye"></i></div>
+          <div class="feature-title">DROWSINESS DETECTION</div>
+          <div class="feature-desc">Continuously measures Eye Aspect Ratio (EAR) using facial landmark AI. Detects prolonged closure in under 500ms and triggers graduated alerts.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon" style="color:var(--orange-warn);border-color:rgba(255,136,0,0.25);background:linear-gradient(135deg,rgba(255,136,0,0.15),rgba(200,80,0,0.1))"><i class="bi bi-lightning-charge-fill"></i></div>
+          <div class="feature-title">SMART ALARM SYSTEM</div>
+          <div class="feature-desc">Adaptive audio alerts that gradually increase in volume. The alarm stops automatically when eyes reopen — no manual intervention needed.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon" style="color:var(--accent);border-color:rgba(0,255,136,0.25);background:linear-gradient(135deg,rgba(0,255,136,0.15),rgba(0,200,100,0.1))"><i class="bi bi-geo-alt-fill"></i></div>
+          <div class="feature-title">GPS + ACCIDENT DETECT</div>
+          <div class="feature-desc">Geolocation capture during every session. Automatic emergency alerts with GPS coordinates sent to admin when an accident is suspected.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon" style="color:#8250ff;border-color:rgba(130,80,255,0.25);background:linear-gradient(135deg,rgba(130,80,255,0.15),rgba(80,40,200,0.1))"><i class="bi bi-broadcast"></i></div>
+          <div class="feature-title">LIVE COMPANY ALERTS</div>
+          <div class="feature-desc">Real-time push notifications to admin dashboard. Fleet managers are instantly notified of any fatigue or danger event with full context.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon" style="color:var(--yellow-warn);border-color:rgba(255,204,0,0.25);background:linear-gradient(135deg,rgba(255,204,0,0.12),rgba(200,150,0,0.08))"><i class="bi bi-bar-chart-fill"></i></div>
+          <div class="feature-title">ANALYTICS DASHBOARD</div>
+          <div class="feature-desc">Session history, safety score trends, driver rankings and fatigue frequency charts — all accessible from the admin control center.</div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-4 reveal">
+        <div class="feature-card">
+          <div class="feature-icon" style="color:var(--red-alert);border-color:rgba(255,34,68,0.25);background:linear-gradient(135deg,rgba(255,34,68,0.12),rgba(200,0,30,0.08))"><i class="bi bi-shield-fill-exclamation"></i></div>
+          <div class="feature-title">MULTI-CONDITION AI</div>
+          <div class="feature-desc">Works with glasses, in low light, partial occlusion, and during head movement. Advanced landmark normalization ensures high accuracy in all conditions.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ TECHNOLOGY ══════════════════════ -->
+<section class="section-pad" id="technology" style="background:var(--navy-2);">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-5 reveal">
+        <div class="section-eyebrow mb-3">Core Technology</div>
+        <h2 class="section-title mb-4" style="font-size:clamp(1.8rem,4vw,2.5rem);">
+          HOW THE <br><span style="color:var(--cyan)">AI ENGINE</span><br> WORKS
+        </h2>
+        <div class="tech-steps">
+          
+          <div class="d-flex gap-3 mb-3 align-items-start">
+            <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;color:var(--cyan);opacity:0.6;min-width:28px;padding-top:2px;">01</div>
+            <div>
+              <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:700;letter-spacing:0.06em;margin-bottom:4px;">WEBCAM CAPTURE</div>
+              <div style="font-size:0.82rem;color:var(--text-secondary);">Browser-native MediaDevices API captures video frames at 30 FPS</div>
+            </div>
+          </div>
+          <div class="d-flex gap-3 mb-3 align-items-start">
+            <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;color:var(--cyan);opacity:0.6;min-width:28px;padding-top:2px;">02</div>
+            <div>
+              <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:700;letter-spacing:0.06em;margin-bottom:4px;">FACE LANDMARK DETECTION</div>
+              <div style="font-size:0.82rem;color:var(--text-secondary);">MediaPipe Face Mesh maps 468 facial points in real-time</div>
+            </div>
+          </div>
+          <div class="d-flex gap-3 mb-3 align-items-start">
+            <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;color:var(--cyan);opacity:0.6;min-width:28px;padding-top:2px;">03</div>
+            <div>
+              <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:700;letter-spacing:0.06em;margin-bottom:4px;">EAR CALCULATION</div>
+              <div style="font-size:0.82rem;color:var(--text-secondary);">Eye Aspect Ratio formula measures eye openness every frame</div>
+            </div>
+          </div>
+          <div class="d-flex gap-3 align-items-start">
+            <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;color:var(--cyan);opacity:0.6;min-width:28px;padding-top:2px;">04</div>
+            <div>
+              <div style="font-family:var(--font-display);font-size:0.85rem;font-weight:700;letter-spacing:0.06em;margin-bottom:4px;">ALERT + LOG</div>
+              <div style="font-size:0.82rem;color:var(--text-secondary);">Triggers alarm, logs event to database, notifies company</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7 reveal">
+        <!-- Tech stack visual -->
+        <div class="glass-card p-4">
+          <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);margin-bottom:1.5rem;text-transform:uppercase;">TECHNOLOGY STACK</div>
+          <div class="row g-3">
+            {% for tech in tech_stack %}
+            <div class="col-6 col-md-3">
+              <div style="padding:0.9rem;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.12);border-radius:10px;text-align:center;">
+                <div style="font-family:var(--font-display);font-size:0.72rem;font-weight:700;color:var(--cyan);letter-spacing:0.08em;">{{ tech }}</div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="divider-glow"></div>
+
+          <div>
+            <div style="font-family:var(--font-display);font-size:0.7rem;letter-spacing:0.15em;color:var(--text-muted);margin-bottom:0.75rem;">EAR THRESHOLD ANALYSIS</div>
+            <div style="font-family:var(--font-mono);font-size:0.85rem;color:var(--cyan);background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.1);border-radius:8px;padding:1rem;">
+              <span style="color:var(--text-muted)"># Eye Aspect Ratio Formula</span><br>
+              EAR = (‖p2−p6‖ + ‖p3−p5‖) / (2 · ‖p1−p4‖)<br><br>
+              <span style="color:var(--text-muted)"># Threshold</span><br>
+              EAR &lt; <span style="color:var(--accent)">0.25</span> → Eye Closed<br>
+              Frames &gt; <span style="color:var(--red-alert)">15</span>  → 🚨 ALERT TRIGGERED
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ CTA ══════════════════════ -->
+<section class="section-pad" style="background:var(--navy);position:relative;overflow:hidden;">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse 60% 60% at 50% 50%,rgba(0,102,255,0.1),transparent);pointer-events:none;"></div>
+  <div class="container text-center" style="position:relative;z-index:1;">
+    <div class="reveal">
+      <div class="section-eyebrow mb-3 justify-content-center">Start Today</div>
+      <h2 class="section-title mb-4" style="font-size:clamp(2rem,5vw,3.5rem);">
+        READY TO PROTECT<br><span class="gradient-text">YOUR FLEET?</span>
+      </h2>
+      <p style="color:var(--text-secondary);max-width:480px;margin:0 auto 2.5rem;line-height:1.8;">
+        Register your drivers, connect your fleet, and let Avalon's AI keep watch 24/7.
+        Setup takes minutes. Protection lasts forever.
+      </p>
+      <a href="{% url 'register' %}" class="avalon-btn-primary" style="font-size:0.9rem;padding:1rem 2.5rem;">
+        <i class="bi bi-shield-fill-check me-2"></i>Register Your Driver Now
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Scroll reveal
+const revealEls = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) {
+      setTimeout(() => e.target.classList.add('visible'), i * 80);
+    }
+  });
+}, { threshold: 0.12 });
+revealEls.forEach(el => observer.observe(el));
+</script>
+{% endblock %}
